@@ -2,12 +2,11 @@
 
 #include "Arduino.h"
 #include <FastLED.h>
-#include <vector>
+#include <ArduinoSTL.h>
 
 #include "fire_effect.h"
 #include "sky_effect.h"
 #include "pingpong_effect.h"
-
 #include "fade_filter.h"
 #include "sin_filter.h"
 
@@ -15,7 +14,6 @@
 
 #define COLOR_ORDER GRB
 #define CHIPSET     WS2812B
-#define LED_PIN     40
 
 #define BRIGHTNESS  100
 
@@ -34,13 +32,12 @@ public:
 
   light()
   : m_mode( OFF )
-  , m_prev_mode( OFF )
   , m_effects()
   , m_prev_effect( -1 )
   , m_current_effect( -1 )
   , m_timer( 0 )
   {        
-    FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>( leds, config::NUM_LEDS ).setCorrection( TypicalLEDStrip );
+    FastLED.addLeds<CHIPSET, config::LED_PIN, COLOR_ORDER>( leds, config::NUM_LEDS ).setCorrection( TypicalLEDStrip );
     FastLED.setBrightness( BRIGHTNESS );
 
     m_effects.push_back( new fire_effect( leds ) );
@@ -50,20 +47,20 @@ public:
 
   void on()
   {
-    m_mode = TURN_ON;  
+    m_mode = ON;  
     
     Serial.println( "TURN_ON" );
 
-    do_turn_on();
+    do_on();
   }
 
   void off()
   {
-    m_mode = TURN_OFF;
+    m_mode = OFF;
 
     Serial.println( "TURN_OFF" );
     
-    do_turn_off();
+    do_off();
   }
 
   void mode()
@@ -77,7 +74,7 @@ public:
       m_prev_effect = m_current_effect;      
     }
     
-    m_mode = EFFECT_TRANSITION;
+    m_mode = EFFECT;
     
     m_current_effect++;
 
@@ -96,7 +93,6 @@ public:
 
   void update()
   {
-    
     if( millis() - m_timer < config::UPDATE_MS )
     {
       return;
