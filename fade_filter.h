@@ -3,11 +3,6 @@
 #include "filter.h"
 #include "config.h"
 
-/*
-#define FADE_TIME_MS 500
-#define STEPS ( FADE_TIME_MS / config::UPDATE_MS )
-#define DELTA ( 1.0 / STEPS )
-*/
 class fade_filter : public filter
 {
   public:  
@@ -20,21 +15,15 @@ class fade_filter : public filter
   , m_delta( 1.0 / m_steps )
   {
     init();
-
-    Serial.println( m_steps );
-    Serial.println( m_delta );
   }
 
   bool update( CRGB* leds )
   {
     m_iterations++;
     
-    for( int i( 0 ); i < config::NUM_X_LEDS; ++i )
+    for( int i( 0 ); i < config::NUM_LEDS; ++i )
     {
-      for( int j( 0 ); j < config::NUM_Y_LEDS; ++j )
-      { 
-        fade( leds[ i * config::NUM_Y_LEDS + j ] );
-      } 
+      fade( leds[ i ] );
     }
 
     if( m_dir_up )

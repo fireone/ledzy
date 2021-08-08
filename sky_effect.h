@@ -5,7 +5,8 @@
 
 #include "effect.h"
 #include "config.h"
-#define NUM_STARS 8
+
+#define NUM_STARS 200
 
 namespace 
 {
@@ -19,7 +20,7 @@ struct star
 };
 }
 
-star stars[NUM_STARS];
+star stars[ NUM_STARS ];
 
 class sky_effect : public effect
 {
@@ -32,22 +33,22 @@ class sky_effect : public effect
 
   void init()
   {
-    for( int i = 0; i < NUM_STARS; i++)
+    for( int i = 0; i < NUM_STARS; i++ )
     {
-      stars[i].intensity = random8( 255 );
-      stars[i].pos = random8( config::NUM_LEDS );
-      stars[i].dir = (random(2) == 0 ? true : false );
+      stars[i].intensity = random( 255 );
+      stars[i].pos = random( config::NUM_LEDS );
+      stars[i].dir = ( random( 2 ) == 0 ? true : false );
     } 
   }
 
   void update()
   {
-    for( int i = 0; i < config::NUM_LEDS; i++)
+    for( int i = 0; i < config::NUM_LEDS; ++i )
     {
       m_leds[i] = CRGB::Black;
     } 
     
-    for( int i = 0; i < NUM_STARS; i++)
+    for( int i = 0; i < NUM_STARS; ++i )
     {
       if( stars[i].dir )
       {

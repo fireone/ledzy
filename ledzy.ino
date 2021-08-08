@@ -2,47 +2,51 @@
 #include "light.h"
 #include "config.h"
 
-light l1;
+button* p_button_on_off;
+button* p_button_mode;
+light*  p_light;
 
 void light_on()
 {
-  if( l1.get_mode() != light::ON )
+  if( p_light->get_mode() != light::ON )
   {
-    l1.on();
+    p_light->on();
   }
   else
   {
-    l1.off();
+    p_light->off();
   }
 }
 
 void light_off()
 {
-  l1.off();
+  p_light->off();
 }
 
-void shift_light_effect()
+void next_effect()
 {
-  l1.mode();
+  p_light->mode();
 }
-
-button b1( config::B1_PIN, light_on, light_off, DIRECT );
-button b2( config::B2_PIN, shift_light_effect, shift_light_effect, CONTINUOUS );
 
 void setup()
 {
+  delay( 2000 );
+  
   Serial.begin( 9600 );
 
   pinMode( config::B1_PIN, INPUT_PULLUP );
   pinMode( config::B2_PIN, INPUT_PULLUP );
 
-  light_off();
+  p_button_on_off = new button( config::B1_PIN, light_on, light_off, DIRECT );
+  p_button_mode = new button( config::B2_PIN, next_effect, next_effect, CONTINUOUS );
+
+  p_light = new light();
 }
 
 void loop()
 {
-  b1.update();
-  b2.update();
-
-  l1.update();
+  p_button_on_off->update();
+  p_button_mode->update();
+  
+  p_light->update();
 }

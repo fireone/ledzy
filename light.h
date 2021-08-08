@@ -1,14 +1,15 @@
 #pragma once
 
 #include "Arduino.h"
+#define FASTLED_INTERNAL
 #include <FastLED.h>
-#include <ArduinoSTL.h>
 
 #include "fire_effect.h"
 #include "sky_effect.h"
 #include "pingpong_effect.h"
 #include "fade_filter.h"
 #include "sin_filter.h"
+#include "diagonal_on.h"
 
 #include "config.h"
 
@@ -19,71 +20,61 @@
 
 CRGB leds[ config::NUM_LEDS ];
 
+#define NUM_EFFECTS 3
+
+effect* effects[ NUM_EFFECTS ];
+
 class light
 {
 public:
 
   enum LIGHT_MODE
   {
-    ON,
+    ON = 0,
     OFF,
-    EFFECT
+    EFFECT,
   };  
 
   light()
   : m_mode( OFF )
-  , m_effects()
-  , m_prev_effect( -1 )
+  , m_request_mode( OFF )
+  , m_on_effect( leds )
   , m_current_effect( -1 )
   , m_timer( 0 )
   {        
     FastLED.addLeds<CHIPSET, config::LED_PIN, COLOR_ORDER>( leds, config::NUM_LEDS ).setCorrection( TypicalLEDStrip );
     FastLED.setBrightness( BRIGHTNESS );
 
-    m_effects.push_back( new fire_effect( leds ) );
-    m_effects.push_back( new sky_effect( leds ) );
-    m_effects.push_back( new pingpong_effect( leds ) );
+    setup_effects();
+  }
+
+  void setup_effects()
+  {
+    effects[ 0 ] = new fire_effect( leds );
+    effects[ 1 ] = new sky_effect( leds );
+    effects[ 2 ] = new pingpong_effect( leds );
   }
 
   void on()
   {
-    m_mode = ON;  
-    
-    Serial.println( "TURN_ON" );
-
-    do_on();
+    m_request_mode = ON;  
   }
 
   void off()
   {
-    m_mode = OFF;
-
-    Serial.println( "TURN_OFF" );
-    
-    do_off();
+    m_request_mode = OFF;
   }
 
   void mode()
   {
-    if( m_mode == ON || m_mode == OFF )
-    {
-      m_prev_effect = -1;  
-    }
-    else
-    {
-      m_prev_effect = m_current_effect;      
-    }
-    
-    m_mode = EFFECT;
+    m_request_mode = EFFECT;
     
     m_current_effect++;
 
-    if( m_current_effect == m_effects.size() )
+    if( m_current_effect == NUM_EFFECTS )
     {
       m_current_effect = 0;
     }
-
-    Serial.println( static_cast<int>( m_current_effect ) ); 
   }
 
   LIGHT_MODE get_mode()
@@ -92,7 +83,7 @@ public:
   }
 
   void update()
-  {
+  {    
     if( millis() - m_timer < config::UPDATE_MS )
     {
       return;
@@ -119,10 +110,10 @@ public:
 private:
   
   LIGHT_MODE m_mode;
+  LIGHT_MODE m_request_mode;
 
-  std::vector<effect*> m_effects;
+  diagonal_on m_on_effect;
   
-  int m_prev_effect;
   int m_current_effect;
   
   int m_timer;
@@ -134,7 +125,29 @@ private:
     if( on_entry )
     {
       on_entry = false;  
+
+      m_mode = ON;
+
+      m_on_effect.reset();
     }
+
+    if( m_request_mode == OFF )
+    {
+      m_mode = OFF;
+      on_entry = true;
+      m_on_effect.reset();
+      return;
+    }
+    else if( m_request_mode == EFFECT )
+    {
+      m_mode = EFFECT;
+      on_entry = true;
+      return;
+    }
+
+    m_on_effect.update();
+  
+    FastLED.show();
   }
 
   void do_off()
@@ -144,6 +157,25 @@ private:
     if( on_entry )
     {
       on_entry = false;  
+
+      m_mode = OFF;
+
+      set_all_leds( CRGB::Black );
+
+      FastLED.show();
+    }
+
+    if( m_request_mode == ON )
+    {
+      m_mode = ON;
+      on_entry = true;
+      return;
+    }
+    else if( m_request_mode == EFFECT )
+    {
+      m_mode = EFFECT;
+      on_entry = true;
+      return;
     }
   }
 
@@ -154,21 +186,33 @@ private:
     if( on_entry )
     {
       on_entry = false;  
+
+      m_mode = EFFECT;
     }
-    
-    m_effects[ m_current_effect ]->update();
+
+    if( m_request_mode == ON )
+    {
+      m_mode = ON;
+      on_entry = true;
+      return;
+    }
+    else if( m_request_mode == OFF )
+    {
+      m_mode = OFF;
+      on_entry = true;
+      return;
+    }
+
+    effects[ m_current_effect ]->update();
 
     FastLED.show();
   }
 
   void set_all_leds( const CRGB& color )
   {
-    for( int i( 0 ); i < config::NUM_X_LEDS; ++i )
+    for( int i( 0 ); i < config::NUM_LEDS; ++i )
     {
-      for( int j( 0 ); j < config::NUM_Y_LEDS; ++j )
-      { 
-        leds[ i * config::NUM_Y_LEDS + j ] = color;
-      } 
+        leds[ i ] = color;
     }
   }
 };
