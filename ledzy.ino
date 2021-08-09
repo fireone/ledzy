@@ -30,7 +30,7 @@ void next_effect()
 
 void setup()
 {
-  delay( 2000 );
+  delay( config::BOOT_DELAY_MS );
   
   Serial.begin( 9600 );
 
