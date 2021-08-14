@@ -9,7 +9,7 @@
 #include "pingpong_effect.h"
 #include "fade_filter.h"
 #include "sin_filter.h"
-#include "diagonal_on.h"
+#include "diagonal_effect.h"
 
 #include "config.h"
 
@@ -38,7 +38,8 @@ public:
   light()
   : m_mode( OFF )
   , m_request_mode( OFF )
-  , m_on_effect( leds )
+  , m_on_effect( CRGB::White, leds )
+  , m_off_effect( CRGB::Black, leds )
   , m_current_effect( -1 )
   , m_timer( 0 )
   {        
@@ -112,7 +113,8 @@ private:
   LIGHT_MODE m_mode;
   LIGHT_MODE m_request_mode;
 
-  diagonal_on m_on_effect;
+  diagonal_effect m_on_effect;
+  diagonal_effect m_off_effect;
   
   int m_current_effect;
   
@@ -135,7 +137,6 @@ private:
     {
       m_mode = OFF;
       on_entry = true;
-      m_on_effect.reset();
       return;
     }
     else if( m_request_mode == EFFECT )
@@ -160,9 +161,7 @@ private:
 
       m_mode = OFF;
 
-      set_all_leds( CRGB::Black );
-
-      FastLED.show();
+      m_off_effect.reset();
     }
 
     if( m_request_mode == ON )
@@ -177,6 +176,10 @@ private:
       on_entry = true;
       return;
     }
+
+    m_off_effect.update();
+
+    FastLED.show();
   }
 
   void do_effect()

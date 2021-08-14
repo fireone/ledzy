@@ -3,7 +3,7 @@
 namespace config
 {
 
-static const int BOOT_DELAY_MS = 3500;
+static const int BOOT_DELAY_MS = 4000;
 
 static const int B1_PIN = 51;
 static const int B2_PIN = 53;

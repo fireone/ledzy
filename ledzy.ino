@@ -6,7 +6,7 @@ button* p_button_on_off;
 button* p_button_mode;
 light*  p_light;
 
-void light_on()
+void light_toggle()
 {
   if( p_light->get_mode() != light::ON )
   {
@@ -37,7 +37,7 @@ void setup()
   pinMode( config::B1_PIN, INPUT_PULLUP );
   pinMode( config::B2_PIN, INPUT_PULLUP );
 
-  p_button_on_off = new button( config::B1_PIN, light_on, light_off, DIRECT );
+  p_button_on_off = new button( config::B1_PIN, light_toggle, light_off, DIRECT );
   p_button_mode = new button( config::B2_PIN, next_effect, next_effect, CONTINUOUS );
 
   p_light = new light();
